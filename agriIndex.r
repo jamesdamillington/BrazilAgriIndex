@@ -1,4 +1,4 @@
-#script to create agriculture capital map and analysis files (e.g. to compare to production data
+#script to create agriculture capital map  (e.g. to compare to production data)
 
 #requires maps from soilMap.r, slopeMap.r and climate data from cru_ts4.zip (via https://crudata.uea.ac.uk/cru/data/hrg/)
 
@@ -7,7 +7,6 @@
 #Variable 2: Climate (using method described in Victoria et al. 2007 DOI: 10.1175/EI198.1)
 #These are combined into a final Agriculture Capital. 
 
-#This script allows us create data to compare different ways of creating the agriculture Captial
 
 rm(list = ls())
 library(raster)
@@ -294,45 +293,45 @@ calcAgriMaps <- function(munis.r, PAW, year, BRA.e)
   #write data to files
   if(writeClimRast)
   {
-    writeRaster(avDEF, paste0(outputDir,"/AnnualDEF_rcp",RCP,"_",year,".asc"), format = 'ascii', overwrite=T)
-    writeRaster(avPET, paste0(outputDir,"/AnnualPET_rcp",RCP,"_",year,".asc"), format = 'ascii', overwrite=T)
-    writeRaster(Ta, paste0(outputDir,"/AnnualTemperature_rcp",RCP,"_",year,".asc"), format = 'ascii', overwrite=T)
-    writeRaster(Pa, paste0(outputDir,"/AnnualPrecipitation_rcp",RCP,"_",year,".asc"), format = 'ascii', overwrite=T)
-    writeRaster(Di, paste0(outputDir,"/AnnualDrynessIndex_rcp",RCP,"_",year,".asc"), format = 'ascii', overwrite=T)
+    writeRaster(avDEF, paste0(outputDir,"/",className,"/AnnualDEF_rcp",RCP,"_",year,".asc"), format = 'ascii', overwrite=T)
+    writeRaster(avPET, paste0(outputDir,"/",className,"/AnnualPET_rcp",RCP,"_",year,".asc"), format = 'ascii', overwrite=T)
+    writeRaster(Ta, paste0(outputDir,"/",className,"/AnnualTemperature_rcp",RCP,"_",year,".asc"), format = 'ascii', overwrite=T)
+    writeRaster(Pa, paste0(outputDir,"/",className,"/AnnualPrecipitation_rcp",RCP,"_",year,".asc"), format = 'ascii', overwrite=T)
+    writeRaster(Di, paste0(outputDir,"/",className,"/AnnualDrynessIndex_rcp",RCP,"_",year,".asc"), format = 'ascii', overwrite=T)
   }
   
   #write pdfs
   if(writeClimPdf)
   {
-    pdf(paste0(outputDir,"/mDEF",year,".pdf"))
+    pdf(paste0(outputDir,"/",className,"/mDEF",year,".pdf"))
     plot(DEF.b, ext = BRA.e)
     dev.off()
     
-    pdf(paste0(outputDir,"/mPET",year,".pdf"))
+    pdf(paste0(outputDir,"/",className,"/mPET",year,".pdf"))
     plot(PET.b, ext = BRA.e)
     dev.off()
 
-    pdf(paste0(outputDir,"/mET",year,".pdf"))
+    pdf(paste0(outputDir,"/",className,"/mET",year,".pdf"))
     plot(ET.b, ext = BRA.e)
     dev.off()
     
-    pdf(paste0(outputDir,"/mPPTN",year,".pdf"))
+    pdf(paste0(outputDir,"/",className,"/mPPTN",year,".pdf"))
     plot(pre.b, ext = BRA.e)
     dev.off()
     
-    pdf(paste0(outputDir,"/mmeanDEF",year,".pdf"))
+    pdf(paste0(outputDir,"/",className,"/mmeanDEF",year,".pdf"))
     plot(avDEF, ext = BRA.e)
     dev.off()
     
-    pdf(paste0(outputDir,"/mmeanPET",year,".pdf"))
+    pdf(paste0(outputDir,"/",className,"/mmeanPET",year,".pdf"))
     plot(avPET, ext = BRA.e)
     dev.off()
     
-    pdf(paste0(outputDir,"/mDI",year,".pdf"))
+    pdf(paste0(outputDir,"/",className,"/mDI",year,".pdf"))
     plot(Di, ext = BRA.e)
     dev.off()
     
-    pdf(paste0(outputDir,"/mmeanDI",year,".pdf"))
+    pdf(paste0(outputDir,"/",className,"/mmeanDI",year,".pdf"))
     plot(avDi, ext = BRA.e)
     dev.off()
   }
@@ -360,61 +359,60 @@ calcAgriMaps <- function(munis.r, PAW, year, BRA.e)
     #3 – Strong
     #4 – Very strong
 
-  #Agri1<-Di
-  Agri1 <- nullRaster
   
+  ClimLim <- nullRaster
   
-  Agri1[DEFmonths[]<=2]<-0
-  Agri1[DEFmonths[]>2&DEFmonths[]<=4]<-1
-  Agri1[DEFmonths[]>4&DEFmonths[]<=6]<-2
-  Agri1[DEFmonths[]==7]<-3
-  Agri1[DEFmonths[]>7]<-4
+  ClimLim[DEFmonths[]<=2]<-0
+  ClimLim[DEFmonths[]>2&DEFmonths[]<=4]<-1
+  ClimLim[DEFmonths[]>4&DEFmonths[]<=6]<-2
+  ClimLim[DEFmonths[]==7]<-3
+  ClimLim[DEFmonths[]>7]<-4
   
-  # Agri1[DEFmonths[]>=1&DEFmonths[]<=3&avDi[]<20]<-0
-  # Agri1[DEFmonths[]>=1&DEFmonths[]<=3&avDi[]>=20&avDi[]<40]<-1
-  # Agri1[DEFmonths[]>=1&DEFmonths[]<=3&avDi[]>=40&avDi[]<60]<-2
-  # Agri1[DEFmonths[]>=1&DEFmonths[]<=3&avDi[]>=60&avDi[]<80]<-3
-  # Agri1[DEFmonths[]>=1&DEFmonths[]<=3&avDi[]>=80]<-4
+  # ClimLim[DEFmonths[]>=1&DEFmonths[]<=3&avDi[]<20]<-0
+  # ClimLim[DEFmonths[]>=1&DEFmonths[]<=3&avDi[]>=20&avDi[]<40]<-1
+  # ClimLim[DEFmonths[]>=1&DEFmonths[]<=3&avDi[]>=40&avDi[]<60]<-2
+  # ClimLim[DEFmonths[]>=1&DEFmonths[]<=3&avDi[]>=60&avDi[]<80]<-3
+  # ClimLim[DEFmonths[]>=1&DEFmonths[]<=3&avDi[]>=80]<-4
   # 
-  # Agri1[DEFmonths[]>=4&DEFmonths[]<=6&avDi[]<20]<-1
-  # Agri1[DEFmonths[]>=4&DEFmonths[]<=6&avDi[]>=20&avDi[]<40]<-2
-  # Agri1[DEFmonths[]>=4&DEFmonths[]<=6&avDi[]>=40&avDi[]<60]<-3
-  # Agri1[DEFmonths[]>=4&DEFmonths[]<=6&avDi[]>=60&avDi[]<80]<-4
-  # Agri1[DEFmonths[]>=4&DEFmonths[]<=6&avDi[]>=80]<-4
+  # ClimLim[DEFmonths[]>=4&DEFmonths[]<=6&avDi[]<20]<-1
+  # ClimLim[DEFmonths[]>=4&DEFmonths[]<=6&avDi[]>=20&avDi[]<40]<-2
+  # ClimLim[DEFmonths[]>=4&DEFmonths[]<=6&avDi[]>=40&avDi[]<60]<-3
+  # ClimLim[DEFmonths[]>=4&DEFmonths[]<=6&avDi[]>=60&avDi[]<80]<-4
+  # ClimLim[DEFmonths[]>=4&DEFmonths[]<=6&avDi[]>=80]<-4
   # 
-  # Agri1[DEFmonths[]>=7&DEFmonths[]<=9&avDi[]<20]<-2
-  # Agri1[DEFmonths[]>=7&DEFmonths[]<=9&avDi[]>=20&avDi[]<40]<-3
-  # Agri1[DEFmonths[]>=7&DEFmonths[]<=9&avDi[]>=40&avDi[]<60]<-4
-  # Agri1[DEFmonths[]>=7&DEFmonths[]<=9&avDi[]>=60&avDi[]<80]<-4
-  # Agri1[DEFmonths[]>=7&DEFmonths[]<=9&avDi[]>=80]<-4
+  # ClimLim[DEFmonths[]>=7&DEFmonths[]<=9&avDi[]<20]<-2
+  # ClimLim[DEFmonths[]>=7&DEFmonths[]<=9&avDi[]>=20&avDi[]<40]<-3
+  # ClimLim[DEFmonths[]>=7&DEFmonths[]<=9&avDi[]>=40&avDi[]<60]<-4
+  # ClimLim[DEFmonths[]>=7&DEFmonths[]<=9&avDi[]>=60&avDi[]<80]<-4
+  # ClimLim[DEFmonths[]>=7&DEFmonths[]<=9&avDi[]>=80]<-4
   # 
-  # Agri1[DEFmonths[]>=10&DEFmonths[]<=12&avDi[]<20]<-3
-  # Agri1[DEFmonths[]>=10&DEFmonths[]<=12&avDi[]>=20&avDi[]<40]<-4
-  # Agri1[DEFmonths[]>=10&DEFmonths[]<=12&avDi[]>=40&avDi[]<60]<-4
-  # Agri1[DEFmonths[]>=10&DEFmonths[]<=12&avDi[]>=60&avDi[]<80]<-4
-  # Agri1[DEFmonths[]>=10&DEFmonths[]<=12&avDi[]>=80]<-4
+  # ClimLim[DEFmonths[]>=10&DEFmonths[]<=12&avDi[]<20]<-3
+  # ClimLim[DEFmonths[]>=10&DEFmonths[]<=12&avDi[]>=20&avDi[]<40]<-4
+  # ClimLim[DEFmonths[]>=10&DEFmonths[]<=12&avDi[]>=40&avDi[]<60]<-4
+  # ClimLim[DEFmonths[]>=10&DEFmonths[]<=12&avDi[]>=60&avDi[]<80]<-4
+  # ClimLim[DEFmonths[]>=10&DEFmonths[]<=12&avDi[]>=80]<-4
   
   #par(mfrow=c(1,1))
-  #plot(Agri1)
+  #plot(ClimLim)
   
-  writeRaster(Agri1, paste0(outputDir,"/mTable1",year,".asc"), format = 'ascii', overwrite=T)
+  writeRaster(ClimLim, paste0(outputDir,"/",className,"/ClimLim",year,".asc"), format = 'ascii', overwrite=T)
   
-  pdf(paste0(outputDir,"/mTable1",year,".pdf"))
-  plot(Agri1, ext = BRA.e)
+  pdf(paste0(outputDir,"/",className,"/ClimLim",year,".pdf"))
+  plot(ClimLim, ext = BRA.e)
   dev.off()
   
-  pdf(paste0(outputDir,"/mDEFmonths",year,".pdf"))
+  pdf(paste0(outputDir,"/",className,"/DEFmonths",year,".pdf"))
   plot(DEFmonths, ext = BRA.e)
   dev.off()
  
   #create map of double cropping
   #discussion with Ramon by email in March 2019 suggested that DC is not possible on limitation 3 and 4
-  dc.f <- Agri1
+  dc.f <- ClimLim
   values(dc.f)[values(dc.f)==0 | values(dc.f)==2 | values(dc.f)==3 ] = 1 
   values(dc.f)[values(dc.f)==4] = 0 
-  writeRaster(dc.f, paste0(outputDir,"/DC",year,".asc"), format = 'ascii', overwrite=T)
+  writeRaster(dc.f, paste0(outputDir,"/",className,"/DC",year,".asc"), format = 'ascii', overwrite=T)
 
-  pdf(paste0(outputDir,"/mDC",year,".pdf"))
+  pdf(paste0(outputDir,"/",className,"/DC",year,".pdf"))
   plot(dc.f, ext = BRA.e)
   dev.off()
   
@@ -423,50 +421,57 @@ calcAgriMaps <- function(munis.r, PAW, year, BRA.e)
   #Each combination is reclassified with a code accordingly to the maximum value of the combination (the value of one of the two variables at least). 
   #The code (suitability classes which equate to Agricultural Capital for CRAFTY) for the combined map was divided by 4 to represent the scale values from 0 to 1.
 
-  vagri.f <- Agri1
-  values(vagri.f)[values(Agri1)==0&values(vslope.m)==0] = 1      #best
-  values(vagri.f)[values(Agri1)==0&values(vslope.m)==1] = 0.75
-  values(vagri.f)[values(Agri1)==0&values(vslope.m)==2] = 0.5
-  values(vagri.f)[values(Agri1)==0&values(vslope.m)==3] = 0.25
-  values(vagri.f)[values(Agri1)==0&values(vslope.m)==4] = 0.1
+  vagri.f <- ClimLim
+  values(vagri.f)[values(ClimLim)==0&values(vslope.m)==0] = 1      #best
+  values(vagri.f)[values(ClimLim)==0&values(vslope.m)==1] = 0.75
+  values(vagri.f)[values(ClimLim)==0&values(vslope.m)==2] = 0.5
+  values(vagri.f)[values(ClimLim)==0&values(vslope.m)==3] = 0.25
+  values(vagri.f)[values(ClimLim)==0&values(vslope.m)==4] = 0.1
   
-  values(vagri.f)[values(Agri1)==1&values(vslope.m)==0] = 0.75
-  values(vagri.f)[values(Agri1)==1&values(vslope.m)==1] = 0.75
-  values(vagri.f)[values(Agri1)==1&values(vslope.m)==2] = 0.5
-  values(vagri.f)[values(Agri1)==1&values(vslope.m)==3] = 0.25
-  values(vagri.f)[values(Agri1)==1&values(vslope.m)==4] = 0.1
+  values(vagri.f)[values(ClimLim)==1&values(vslope.m)==0] = 0.75
+  values(vagri.f)[values(ClimLim)==1&values(vslope.m)==1] = 0.75
+  values(vagri.f)[values(ClimLim)==1&values(vslope.m)==2] = 0.5
+  values(vagri.f)[values(ClimLim)==1&values(vslope.m)==3] = 0.25
+  values(vagri.f)[values(ClimLim)==1&values(vslope.m)==4] = 0.1
   
-  values(vagri.f)[values(Agri1)==2&values(vslope.m)==0] = 0.5
-  values(vagri.f)[values(Agri1)==2&values(vslope.m)==1] = 0.5
-  values(vagri.f)[values(Agri1)==2&values(vslope.m)==2] = 0.5
-  values(vagri.f)[values(Agri1)==2&values(vslope.m)==3] = 0.25
-  values(vagri.f)[values(Agri1)==2&values(vslope.m)==4] = 0.1
+  values(vagri.f)[values(ClimLim)==2&values(vslope.m)==0] = 0.5
+  values(vagri.f)[values(ClimLim)==2&values(vslope.m)==1] = 0.5
+  values(vagri.f)[values(ClimLim)==2&values(vslope.m)==2] = 0.5
+  values(vagri.f)[values(ClimLim)==2&values(vslope.m)==3] = 0.25
+  values(vagri.f)[values(ClimLim)==2&values(vslope.m)==4] = 0.1
   
-  values(vagri.f)[values(Agri1)==3&values(vslope.m)==0] = 0.25
-  values(vagri.f)[values(Agri1)==3&values(vslope.m)==1] = 0.25
-  values(vagri.f)[values(Agri1)==3&values(vslope.m)==2] = 0.25
-  values(vagri.f)[values(Agri1)==3&values(vslope.m)==3] = 0.25
-  values(vagri.f)[values(Agri1)==3&values(vslope.m)==4] = 0.1
+  values(vagri.f)[values(ClimLim)==3&values(vslope.m)==0] = 0.25
+  values(vagri.f)[values(ClimLim)==3&values(vslope.m)==1] = 0.25
+  values(vagri.f)[values(ClimLim)==3&values(vslope.m)==2] = 0.25
+  values(vagri.f)[values(ClimLim)==3&values(vslope.m)==3] = 0.25
+  values(vagri.f)[values(ClimLim)==3&values(vslope.m)==4] = 0.1
   
-  values(vagri.f)[values(Agri1)==4&values(vslope.m)==0] = 0.1
-  values(vagri.f)[values(Agri1)==4&values(vslope.m)==1] = 0.1
-  values(vagri.f)[values(Agri1)==4&values(vslope.m)==2] = 0.1
-  values(vagri.f)[values(Agri1)==4&values(vslope.m)==3] = 0.1
-  values(vagri.f)[values(Agri1)==4&values(vslope.m)==4] = 0.1
+  values(vagri.f)[values(ClimLim)==4&values(vslope.m)==0] = 0.1
+  values(vagri.f)[values(ClimLim)==4&values(vslope.m)==1] = 0.1
+  values(vagri.f)[values(ClimLim)==4&values(vslope.m)==2] = 0.1
+  values(vagri.f)[values(ClimLim)==4&values(vslope.m)==3] = 0.1
+  values(vagri.f)[values(ClimLim)==4&values(vslope.m)==4] = 0.1
   values(vagri.f)[values(vagri.f)>1]=0                              #worst
 
   #!check does this need to be resampled/masked before writing?!
-  writeRaster(vagri.f, paste0(outputDir,"/magricultureCapital",year,".asc"), format = 'ascii', overwrite=T)
+  writeRaster(vagri.f, paste0(outputDir,"/",className,"/agricultureCapital",year,".asc"), format = 'ascii', overwrite=T)
   
-  pdf(paste0(outputDir,"/magricultureCapital",year,".pdf"))
+  pdf(paste0(outputDir,"/",className,"/agricultureCapital",year,".pdf"))
   plot(vagri.f, ext = BRA.e)
   dev.off()
   
-  rm(pre,tmn,tmx,pre.b,tmn.b,tmx.b,PET.b,DEF.b,ET.b,Agri1,vagri.f)
+  rm(pre,tmn,tmx,pre.b,tmn.b,tmx.b,PET.b,DEF.b,ET.b,ClimLim,vagri.f)
   
 }
 
+
+
 outputDir <- "Output"
+className <- "class-A"
+
+#create the output directory for this classification if it does not exist
+if(!dir.exists(paste0(outputDir,"/",className))) { dir.create(paste0(outputDir,"/",className)) }
+
 y <-2015
 #for(y in 2011:2014)
 #{
