@@ -17,7 +17,7 @@ library(ncdf4)
 
 #read munis.r as latlong
 #unzip(zipfile="Data/sim10_BRmunis_latlon_5km_2018-04-27.zip",exdir="Data")  #unzip
-munis.r <- raster("Data/sim10_BRmunis_latlon_5km_2018-04-27.asc")
+munis.r <- raster("SpatialData/sim10_BRmunis_latlon_5km_2018-04-27.asc")
 latlong <- "+proj=longlat +ellps=WGS84 +towgs84=0,0,0,0,0,0,0 +no_defs "
 crs(munis.r) <- latlong
 
@@ -36,7 +36,7 @@ crs(munis.r) <- latlong
 
 #read soil texture and set bucket size (see email from Daniel Victoria 2017-11-21)
 #unzip(zipfile="Data/vslope_2018-04-30.zip",exdir="Data")  #unzip
-vslope.m<-raster("Data/vslope_2018-04-30.asc")  
+vslope.m<-raster("SpatialData/vslope_2018-04-30.asc")  
 
 
 
@@ -56,7 +56,7 @@ vslope.m<-raster("Data/vslope_2018-04-30.asc")
 #soil is used to calculate plant available water
 #read soil texture and set bucket size (see email from Daniel Victoria 2017-11-21)
 #unzip(zipfile="Data/soilT_2018-05-01.zip",exdir="Data")  #unzip
-soil<-raster("Data/soilT_2018-05-01.asc")  
+soil<-raster("SpatialData/soilT_2018-05-01.asc")  
 
 #PAW is Plant Available Water
 PAW<-soil
@@ -122,9 +122,9 @@ y_fromYear <- function(year)
 #function to set climate file name (for use in nc2raster) from a year integer and variable (pre, tmn, tmx)
 fn_fromYearVar <- function(year, var)
 {
-  yr = "Data/cruts/cru_ts4.01.1991.2000."
-  if(year > 2000 & year <= 2010) { yr = "Data/cruts/cru_ts4.01.2001.2010."}
-  if(year > 2010 & year <= 2016) { yr = "Data/cruts/cru_ts4.01.2011.2016."}
+  yr = "SpatialData/cruts/cru_ts4.01.1991.2000."
+  if(year > 2000 & year <= 2010) { yr = "SpatialData/cruts/cru_ts4.01.2001.2010."}
+  if(year > 2010 & year <= 2016) { yr = "SpatialData/cruts/cru_ts4.01.2011.2016."}
   
   return(paste0(yr,var,".dat.nc"))
 }
@@ -294,45 +294,45 @@ calcAgriMaps <- function(munis.r, PAW, year, BRA.e)
   #write data to files
   if(writeClimRast)
   {
-    writeRaster(avDEF, paste0(outputDir,"AnnualDEF_rcp",RCP,"_",year,".asc"), format = 'ascii', overwrite=T)
-    writeRaster(avPET, paste0(outputDir,"AnnualPET_rcp",RCP,"_",year,".asc"), format = 'ascii', overwrite=T)
-    writeRaster(Ta, paste0(outputDir,"AnnualTemperature_rcp",RCP,"_",year,".asc"), format = 'ascii', overwrite=T)
-    writeRaster(Pa, paste0(outputDir,"AnnualPrecipitation_rcp",RCP,"_",year,".asc"), format = 'ascii', overwrite=T)
-    writeRaster(Di, paste0(outputDir,"AnnualDrynessIndex_rcp",RCP,"_",year,".asc"), format = 'ascii', overwrite=T)
+    writeRaster(avDEF, paste0(outputDir,"/AnnualDEF_rcp",RCP,"_",year,".asc"), format = 'ascii', overwrite=T)
+    writeRaster(avPET, paste0(outputDir,"/AnnualPET_rcp",RCP,"_",year,".asc"), format = 'ascii', overwrite=T)
+    writeRaster(Ta, paste0(outputDir,"/AnnualTemperature_rcp",RCP,"_",year,".asc"), format = 'ascii', overwrite=T)
+    writeRaster(Pa, paste0(outputDir,"/AnnualPrecipitation_rcp",RCP,"_",year,".asc"), format = 'ascii', overwrite=T)
+    writeRaster(Di, paste0(outputDir,"/AnnualDrynessIndex_rcp",RCP,"_",year,".asc"), format = 'ascii', overwrite=T)
   }
   
   #write pdfs
   if(writeClimPdf)
   {
-    pdf(paste0("Data/mDEF",year,".pdf"))
+    pdf(paste0(outputDir,"/mDEF",year,".pdf"))
     plot(DEF.b, ext = BRA.e)
     dev.off()
     
-    pdf(paste0("Data/mPET",year,".pdf"))
+    pdf(paste0(outputDir,"/mPET",year,".pdf"))
     plot(PET.b, ext = BRA.e)
     dev.off()
 
-    pdf(paste0("Data/mET",year,".pdf"))
+    pdf(paste0(outputDir,"/mET",year,".pdf"))
     plot(ET.b, ext = BRA.e)
     dev.off()
     
-    pdf(paste0("Data/mPPTN",year,".pdf"))
+    pdf(paste0(outputDir,"/mPPTN",year,".pdf"))
     plot(pre.b, ext = BRA.e)
     dev.off()
     
-    pdf(paste0("Data/mmeanDEF",year,".pdf"))
+    pdf(paste0(outputDir,"/mmeanDEF",year,".pdf"))
     plot(avDEF, ext = BRA.e)
     dev.off()
     
-    pdf(paste0("Data/mmeanPET",year,".pdf"))
+    pdf(paste0(outputDir,"/mmeanPET",year,".pdf"))
     plot(avPET, ext = BRA.e)
     dev.off()
     
-    pdf(paste0("Data/mDI",year,".pdf"))
+    pdf(paste0(outputDir,"/mDI",year,".pdf"))
     plot(Di, ext = BRA.e)
     dev.off()
     
-    pdf(paste0("Data/mmeanDI",year,".pdf"))
+    pdf(paste0(outputDir,"/mmeanDI",year,".pdf"))
     plot(avDi, ext = BRA.e)
     dev.off()
   }
@@ -397,13 +397,13 @@ calcAgriMaps <- function(munis.r, PAW, year, BRA.e)
   #par(mfrow=c(1,1))
   #plot(Agri1)
   
-  writeRaster(Agri1, paste0("Data/mTable1",year,".asc"), format = 'ascii', overwrite=T)
+  writeRaster(Agri1, paste0(outputDir,"/mTable1",year,".asc"), format = 'ascii', overwrite=T)
   
-  pdf(paste0("Data/mTable1",year,".pdf"))
+  pdf(paste0(outputDir,"/mTable1",year,".pdf"))
   plot(Agri1, ext = BRA.e)
   dev.off()
   
-  pdf(paste0("Data/mDEFmonths",year,".pdf"))
+  pdf(paste0(outputDir,"/mDEFmonths",year,".pdf"))
   plot(DEFmonths, ext = BRA.e)
   dev.off()
  
@@ -412,9 +412,9 @@ calcAgriMaps <- function(munis.r, PAW, year, BRA.e)
   dc.f <- Agri1
   values(dc.f)[values(dc.f)==0 | values(dc.f)==2 | values(dc.f)==3 ] = 1 
   values(dc.f)[values(dc.f)==4] = 0 
-  writeRaster(dc.f, paste0("Data/DC",year,".asc"), format = 'ascii', overwrite=T)
+  writeRaster(dc.f, paste0(outputDir,"/DC",year,".asc"), format = 'ascii', overwrite=T)
 
-  pdf(paste0("Data/mDC",year,".pdf"))
+  pdf(paste0(outputDir,"/mDC",year,".pdf"))
   plot(dc.f, ext = BRA.e)
   dev.off()
   
@@ -456,9 +456,9 @@ calcAgriMaps <- function(munis.r, PAW, year, BRA.e)
   values(vagri.f)[values(vagri.f)>1]=0                              #worst
 
   #!check does this need to be resampled/masked before writing?!
-  writeRaster(vagri.f, paste0("Data/magricultureCapital",year,".asc"), format = 'ascii', overwrite=T)
+  writeRaster(vagri.f, paste0(outputDir,"/magricultureCapital",year,".asc"), format = 'ascii', overwrite=T)
   
-  pdf(paste0("Data/magricultureCapital",year,".pdf"))
+  pdf(paste0(outputDir,"/magricultureCapital",year,".pdf"))
   plot(vagri.f, ext = BRA.e)
   dev.off()
   
@@ -466,6 +466,7 @@ calcAgriMaps <- function(munis.r, PAW, year, BRA.e)
   
 }
 
+outputDir <- "Output"
 y <-2015
 #for(y in 2011:2014)
 #{
