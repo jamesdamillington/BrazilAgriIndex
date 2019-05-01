@@ -70,7 +70,8 @@ PAW[PAW==5]<-35
 #unzip cruts climate data files (if needed)
 #unzip(zipfile="Data/cru_ts4.zip",exdir="Data/cruts")  # unzip all files 
 
-nc2raster <- function(ncname, ncyear, ncvar)
+#this function January to December (NH agricultural year)
+nc2raster <- function(ncyear, ncvar)
 {
   #this is hacked version of cruts2raster function in library(cruts) see https://rdrr.io/cran/cruts/src/R/import-export.R
   #returns a raster stack of 12 layers for a single year from cru_ts data (e.g. http://data.ceda.ac.uk//badc/cru/data/cru_ts/cru_ts_4.01/data/)
@@ -80,6 +81,7 @@ nc2raster <- function(ncname, ncyear, ncvar)
   #ncyear is an integer indicating which year from the ncdf file is to be returned (so for above file ncyear <- 1 would return data for 2001, ncyear <- 4 would give 2004 etc)
   #ncvar is a character string indicating which variable from the nc file to access (e.g. "pre", "tmp")
   
+  ncname <- fn_fromYearVar(ncyear,ncvar)
   nc <- nc_open(ncname)
   pre_array <- ncvar_get(nc,ncvar)
   lon <- ncvar_get(nc,"lon")
@@ -90,7 +92,8 @@ nc2raster <- function(ncname, ncyear, ncvar)
   dx <- diff(lon[1:2])
   dy <- diff(lat[1:2])
   
-  startmonth <- (ncyear * 12) - 11
+  tr <- y_fromYear(ncyear)
+  startmonth <- (tr * 12) - 11
   
   s1 <- raster(t(pre_array[,,startmonth][,N:1]), xmn=lon[1]-dx/2, xmx=lon[M]+dx/2, ymn=lat[1]-dy/2, ymx=lat[N]+dy/2, crs=CRS("+init=epsg:4326"))
   
@@ -103,6 +106,115 @@ nc2raster <- function(ncname, ncyear, ncvar)
   }
   
   names(s1) <- c("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")
+  
+  return(s1)
+}
+
+
+
+#this function July to June (SH agricultural year)
+nc2rasterSH <- function(ncyear, ncvar)
+{
+  #this is hacked version of cruts2raster function in library(cruts) see https://rdrr.io/cran/cruts/src/R/import-export.R
+  #returns a raster stack of 12 layers for a single year from cru_ts data (e.g. http://data.ceda.ac.uk//badc/cru/data/cru_ts/cru_ts_4.01/data/)
+  #needed becase cruts2raster returns same data (year) regardless of timeRange provided 
+  
+  #ncname is a character string of the ncdf file (e.g."cru_ts4.01.2001.2010.pre.dat.nc")
+  #ncyear is an integer indicating which year from the ncdf file is to be returned (so for above file ncyear <- 1 would return data for 2001, ncyear <- 4 would give 2004 etc)
+  #ncvar is a character string indicating which variable from the nc file to access (e.g. "pre", "tmp")
+  
+
+  #for SH neeed to get two years of data! 
+  #agricultural year is July ncyear-1 (yrA) to June ncyear (yrB)
+  
+  #as long as ncyear is not the first year in a ncdf file (e.g. not 2001) we can use just a single ncdf file
+  #otherwise we need to get data two ncdf file (this is handled below by the if statement)
+  
+  #so first get the ncdf file in which yrB is located
+  
+  ncnameB <- fn_fromYearVar(ncyear,ncvar)
+  ncB <- nc_open(ncnameB)  #get data for yrB
+
+  #get these parameters here (if we need to get for another ncdf file we will below)
+  pre_arrayB <- ncvar_get(ncB,ncvar)
+  lonB <- ncvar_get(ncB,"lon")
+  latB <- ncvar_get(ncB,"lat")
+  
+  MB <- length(lonB)
+  NB <- length(latB)
+  dxB <- diff(lonB[1:2])
+  dyB <- diff(latB[1:2])
+  
+  #need to split the remaining stacking into two loops, one for yrB, one for yrA
+  #startmonth becomes July of yrA
+  #endmonth of yrA is December 
+  
+  #startmonth of yrB is January
+  #endmonth of yrB is June
+  
+  #startmonth <- (ncyear * 12) - 11
+  
+  tr <- y_fromYear(ncyear)
+  
+  #works as long as ncyear (yrB) is not the first in the ncdf file
+  if(tr != 1) {
+    
+    startmonth <- (tr * 12) - 17  
+    
+    s1 <- raster(t(pre_arrayB[,,startmonth][,NB:1]), xmn=lonB[1]-dxB/2, xmx=lonB[MB]+dxB/2, ymn=latB[1]-dyB/2, ymx=latB[NB]+dyB/2, crs=CRS("+init=epsg:4326"))
+    
+    startmonth <- startmonth + 1
+    endmonth <- startmonth + 10 
+    
+    for(mon in startmonth:endmonth)
+    {
+      s1 <- stack(s1, raster(t(pre_arrayB[,,mon][,NB:1]), xmn=lonB[1]-dxB/2, xmx=lonB[MB]+dxB/2, ymn=latB[1]-dyB/2, ymx=latB[NB]+dyB/2, crs=CRS("+init=epsg:4326")))
+    }
+  }
+  
+  #otherwise data for yrA is in an entirely different ncdf file
+  else { 
+    
+    ncnameA <- fn_fromYearVar(ncyear-1, ncvar)
+    print(paste0("reading file ",ncnameA))
+
+    ncA <- nc_open(ncnameA)  #get data for this year
+
+    pre_arrayA <- ncvar_get(ncA,ncvar)
+    lonA <- ncvar_get(ncA,"lon")
+    latA <- ncvar_get(ncA,"lat")
+  
+    MA <- length(lonA)
+    N.A <- length(latA)
+    dxA <- diff(lonA[1:2])
+    dyA <- diff(latA[1:2])
+
+    #from earliest nc file get last 6 months
+    trA <- y_fromYear(ncyear-1)
+    startmonthA <- (trA * 12) - 5 
+    
+    s1 <- raster(t(pre_arrayA[,,startmonthA][,N.A:1]), xmn=lonA[1]-dxA/2, xmx=lonA[MA]+dxA/2, ymn=latA[1]-dyA/2, ymx=latA[N.A]+dyA/2, crs=CRS("+init=epsg:4326"))
+        
+    startmonthA <- startmonthA + 1
+    endmonthA <- startmonthA + 4 
+    
+    for(mon in startmonthA:endmonthA)
+    {
+      s1 <- stack(s1, raster(t(pre_arrayA[,,mon][,N.A:1]), xmn=lonA[1]-dxA/2, xmx=lonA[MA]+dxA/2, ymn=latA[1]-dyA/2, ymx=latA[N.A]+dyA/2, crs=CRS("+init=epsg:4326")))
+    }
+
+    #from later nc file get first 6 months
+    startmonth <- 1  
+    endmonth <- 6 
+    
+    for(mon in startmonth:endmonth)
+    {
+      s1 <- stack(s1, raster(t(pre_arrayB[,,mon][,NB:1]), xmn=lonB[1]-dxB/2, xmx=lonB[MB]+dxB/2, ymn=latB[1]-dyB/2, ymx=latB[NB]+dyB/2, crs=CRS("+init=epsg:4326")))
+    }
+    
+  }
+  
+  names(s1) <- c(paste0("Jul",ncyear-1),paste0("Aug",ncyear-1),paste0("Sep",ncyear-1),paste0("Oct",ncyear-1),paste0("Nov",ncyear-1),paste0("Dec",ncyear-1),paste0("Jan",ncyear),paste0("Feb",ncyear),paste0("Mar",ncyear),paste0("Apr",ncyear),paste0("May",ncyear),paste0("Jun",ncyear))
   
   return(s1)
 }
@@ -133,13 +245,18 @@ fn_fromYearVar <- function(year, var)
 BRA.ext <- extent(-62.39713, -35.43949, -33.89756, -4.06125)
 
 
-calcAgriMaps <- function(munis.r, PAW, year, BRA.e)
+calcAgriMaps <- function(munis.r, PAW, year, BRA.e, hemi)
 {
   #generate timeRange and filenames for this year
   tr <- y_fromYear(year)
   prefn <- fn_fromYearVar(year,"pre") #precipitation,	millimetres per month  see: https://crudata.uea.ac.uk/cru/data/hrg/#info 
   tmnfn <- fn_fromYearVar(year,"tmn") #monthly average daily minimum temperature,	degrees Celsiusunits are
   tmxfn <- fn_fromYearVar(year,"tmx") #monthly average daily maximum temperature,	degrees Celsius
+  
+  #month labels for plots
+  monlab <- c(paste0("Jan",year),paste0("Feb",year),paste0("Mar",year),paste0("Apr",year),paste0("May",year),paste0("Jun",year),paste0("Jul",year),paste0("Aug",year),paste0("Sep",year),paste0("Oct",year),paste0("Nov",year),paste0("Dec",year))
+  if(hemi == "S")  monlab <- c(paste0("Jul",year-1),paste0("Aug",year-1),paste0("Sep",year-1),paste0("Oct",year-1),paste0("Nov",year-1),paste0("Dec",year-1),paste0("Jan",year),paste0("Feb",year),paste0("Mar",year),paste0("Apr",year),paste0("May",year),paste0("Jun",year))
+  
   
   #for testing
   #print(tr)
@@ -148,9 +265,20 @@ calcAgriMaps <- function(munis.r, PAW, year, BRA.e)
   #print(tmxfn)
   
   #read climate files
-  pre <- nc2raster(ncname=prefn,ncyear=tr,ncvar="pre")
-  tmn <- nc2raster(ncname=tmnfn,ncyear=tr,ncvar="tmn")
-  tmx <- nc2raster(ncname=tmxfn,ncyear=tr,ncvar="tmx")
+  
+  #northern hemisphere
+  if(hemi == "N") {
+    pre <- nc2raster(ncyear=year,ncvar="pre")
+    tmn <- nc2raster(ncyear=year,ncvar="tmn")
+    tmx <- nc2raster(ncyear=year,ncvar="tmx")
+  }
+  
+  #souther hemisphere
+  if(hemi == "S") {
+    pre <- nc2rasterSH(ncyear=year,ncvar="pre")
+    tmn <- nc2rasterSH(ncyear=year,ncvar="tmn")
+    tmx <- nc2rasterSH(ncyear=year,ncvar="tmx")
+  }
   
   #pdf(paste0("Data/pre",year,".pdf"))
   #plot(pre, ext = BRA.e)
@@ -207,7 +335,7 @@ calcAgriMaps <- function(munis.r, PAW, year, BRA.e)
     map2(as.list(PET.b), Days, calcPET, I = Idex, a = Adex, N = Ndex) %>% 
     stack()  #remember to re-stack the list after function
   
-  names(PET.b) <- c("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")
+  names(PET.b) <- monlab
  
   #see Victoria et al. 2007 DOI: 10.1175/EI198.1 Table 2 for equations
   #initialise water storage variables 
@@ -280,8 +408,8 @@ calcAgriMaps <- function(munis.r, PAW, year, BRA.e)
   
   }
   
-  names(DEF.b) <- c("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")
-  names(ET.b) <- c("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")
+  names(DEF.b) <- monlab
+  names(ET.b) <- monlab
 
   #calculate Dryness Index
   avDEF<-mean(DEF.b)#mean annual DEF
@@ -467,19 +595,19 @@ calcAgriMaps <- function(munis.r, PAW, year, BRA.e)
 
 
 outputDir <- "Output"
-className <- "class-A"
+className <- "class-A-SH"
 
 #create the output directory for this classification if it does not exist
 if(!dir.exists(paste0(outputDir,"/",className))) { dir.create(paste0(outputDir,"/",className)) }
 
-y <-2015
-#for(y in 2011:2014)
-#{
+#y <-2015
+for(y in 2011:2016)
+{
   writeClimRast <- F
   writeClimPdf <- T
-  calcAgriMaps(munis.r, PAW, y, BRA.ext)
+  calcAgriMaps(munis.r, PAW, y, BRA.ext, "S")
   print(paste0(y," done"))
-#}
+}
 
 
 
