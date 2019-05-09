@@ -418,14 +418,27 @@ calcAgriMaps <- function(munis.r, PAW, year, BRA.e, hemi)
   
   Di <- (100*DEF.b) / PET.b
   
+  
+  #Number of months with water deficit
+  #helper function
+  countWD <- function(vect)
+  {
+    return(sum(vect > 5))
+  }
+  
+  DEFmonths <- calc(DEF.b, countWD)
+  Stoidiffc <- allmeanStoi[12] - allmeanStoi[1]
+  #Stoidiffc
+  
   #write data to files
   if(writeClimRast)
   {
-    writeRaster(avDEF, paste0(outputDir,"/",className,"/AnnualDEF_rcp",RCP,"_",year,".asc"), format = 'ascii', overwrite=T)
-    writeRaster(avPET, paste0(outputDir,"/",className,"/AnnualPET_rcp",RCP,"_",year,".asc"), format = 'ascii', overwrite=T)
-    writeRaster(Ta, paste0(outputDir,"/",className,"/AnnualTemperature_rcp",RCP,"_",year,".asc"), format = 'ascii', overwrite=T)
-    writeRaster(Pa, paste0(outputDir,"/",className,"/AnnualPrecipitation_rcp",RCP,"_",year,".asc"), format = 'ascii', overwrite=T)
-    writeRaster(Di, paste0(outputDir,"/",className,"/AnnualDrynessIndex_rcp",RCP,"_",year,".asc"), format = 'ascii', overwrite=T)
+    writeRaster(avDEF, paste0(outputDir,"/",className,"/MeanAnnualDEF",year,".asc"), format = 'ascii', overwrite=T)
+    writeRaster(avPET, paste0(outputDir,"/",className,"/MeanAnnualPET",year,".asc"), format = 'ascii', overwrite=T)
+    writeRaster(Ta, paste0(outputDir,"/",className,"/MeanAnnualTemp",year,".asc"), format = 'ascii', overwrite=T)
+    writeRaster(Pa, paste0(outputDir,"/",className,"/MeanAnnualPrecip",year,".asc"), format = 'ascii', overwrite=T)
+    writeRaster(avDi, paste0(outputDir,"/",className,"/MeanAnnualDI",year,".asc"), format = 'ascii', overwrite=T)
+    writeRaster(DEFmonths, paste0(outputDir,"/",className,"/CountDEFmonths",year,".asc"), format = 'ascii', overwrite=T)
   }
   
   #write pdfs
@@ -466,16 +479,7 @@ calcAgriMaps <- function(munis.r, PAW, year, BRA.e, hemi)
   
   
   
-  #Number of months with water deficit
-  #helper function
-  countWD <- function(vect)
-  {
-    return(sum(vect > 5))
-  }
-  
-  DEFmonths <- calc(DEF.b, countWD)
-  Stoidiffc <- allmeanStoi[12] - allmeanStoi[1]
-  #Stoidiffc
+
 
   
   #Classify climate limitation (combination of deficit months and dryness index)
@@ -489,43 +493,43 @@ calcAgriMaps <- function(munis.r, PAW, year, BRA.e, hemi)
   ClimLim <- nullRaster
   
   ###new classification
-  # ClimLim[DEFmonths[]<=2]<-0
-  # ClimLim[DEFmonths[]>2&DEFmonths[]<=4]<-1
-  # ClimLim[DEFmonths[]>4&DEFmonths[]<=6]<-2
-  # ClimLim[DEFmonths[]==7]<-3
-  # ClimLim[DEFmonths[]>7]<-4
+  ClimLim[DEFmonths[]<=2]<-0
+  ClimLim[DEFmonths[]>2&DEFmonths[]<=4]<-1
+  ClimLim[DEFmonths[]>4&DEFmonths[]<=6]<-2
+  ClimLim[DEFmonths[]==7]<-3
+  ClimLim[DEFmonths[]>7]<-4
   ###end new classification
   
   ###original classification
-  ClimLim[DEFmonths[]<1&avDi[]<20]<-0
-  ClimLim[DEFmonths[]<1&avDi[]>=20&avDi[]<40]<-0
-  ClimLim[DEFmonths[]<1&avDi[]>=40&avDi[]<60]<-1
-  ClimLim[DEFmonths[]<1&avDi[]>=60&avDi[]<80]<-2
-  ClimLim[DEFmonths[]<1&avDi[]>=80]<-3
-  
-  ClimLim[DEFmonths[]>=1&DEFmonths[]<=3&avDi[]<20]<-0
-  ClimLim[DEFmonths[]>=1&DEFmonths[]<=3&avDi[]>=20&avDi[]<40]<-1
-  ClimLim[DEFmonths[]>=1&DEFmonths[]<=3&avDi[]>=40&avDi[]<60]<-2
-  ClimLim[DEFmonths[]>=1&DEFmonths[]<=3&avDi[]>=60&avDi[]<80]<-3
-  ClimLim[DEFmonths[]>=1&DEFmonths[]<=3&avDi[]>=80]<-4
-   
-  ClimLim[DEFmonths[]>=4&DEFmonths[]<=6&avDi[]<20]<-1
-  ClimLim[DEFmonths[]>=4&DEFmonths[]<=6&avDi[]>=20&avDi[]<40]<-2
-  ClimLim[DEFmonths[]>=4&DEFmonths[]<=6&avDi[]>=40&avDi[]<60]<-3
-  ClimLim[DEFmonths[]>=4&DEFmonths[]<=6&avDi[]>=60&avDi[]<80]<-4
-  ClimLim[DEFmonths[]>=4&DEFmonths[]<=6&avDi[]>=80]<-4
-   
-  ClimLim[DEFmonths[]>=7&DEFmonths[]<=9&avDi[]<20]<-2
-  ClimLim[DEFmonths[]>=7&DEFmonths[]<=9&avDi[]>=20&avDi[]<40]<-3
-  ClimLim[DEFmonths[]>=7&DEFmonths[]<=9&avDi[]>=40&avDi[]<60]<-4
-  ClimLim[DEFmonths[]>=7&DEFmonths[]<=9&avDi[]>=60&avDi[]<80]<-4
-  ClimLim[DEFmonths[]>=7&DEFmonths[]<=9&avDi[]>=80]<-4
-   
-  ClimLim[DEFmonths[]>=10&DEFmonths[]<=12&avDi[]<20]<-3
-  ClimLim[DEFmonths[]>=10&DEFmonths[]<=12&avDi[]>=20&avDi[]<40]<-4
-  ClimLim[DEFmonths[]>=10&DEFmonths[]<=12&avDi[]>=40&avDi[]<60]<-4
-  ClimLim[DEFmonths[]>=10&DEFmonths[]<=12&avDi[]>=60&avDi[]<80]<-4
-  ClimLim[DEFmonths[]>=10&DEFmonths[]<=12&avDi[]>=80]<-4
+  # ClimLim[DEFmonths[]<1&avDi[]<20]<-0
+  # ClimLim[DEFmonths[]<1&avDi[]>=20&avDi[]<40]<-0
+  # ClimLim[DEFmonths[]<1&avDi[]>=40&avDi[]<60]<-1
+  # ClimLim[DEFmonths[]<1&avDi[]>=60&avDi[]<80]<-2
+  # ClimLim[DEFmonths[]<1&avDi[]>=80]<-3
+  # 
+  # ClimLim[DEFmonths[]>=1&DEFmonths[]<=3&avDi[]<20]<-0
+  # ClimLim[DEFmonths[]>=1&DEFmonths[]<=3&avDi[]>=20&avDi[]<40]<-1
+  # ClimLim[DEFmonths[]>=1&DEFmonths[]<=3&avDi[]>=40&avDi[]<60]<-2
+  # ClimLim[DEFmonths[]>=1&DEFmonths[]<=3&avDi[]>=60&avDi[]<80]<-3
+  # ClimLim[DEFmonths[]>=1&DEFmonths[]<=3&avDi[]>=80]<-4
+  #  
+  # ClimLim[DEFmonths[]>=4&DEFmonths[]<=6&avDi[]<20]<-1
+  # ClimLim[DEFmonths[]>=4&DEFmonths[]<=6&avDi[]>=20&avDi[]<40]<-2
+  # ClimLim[DEFmonths[]>=4&DEFmonths[]<=6&avDi[]>=40&avDi[]<60]<-3
+  # ClimLim[DEFmonths[]>=4&DEFmonths[]<=6&avDi[]>=60&avDi[]<80]<-4
+  # ClimLim[DEFmonths[]>=4&DEFmonths[]<=6&avDi[]>=80]<-4
+  #  
+  # ClimLim[DEFmonths[]>=7&DEFmonths[]<=9&avDi[]<20]<-2
+  # ClimLim[DEFmonths[]>=7&DEFmonths[]<=9&avDi[]>=20&avDi[]<40]<-3
+  # ClimLim[DEFmonths[]>=7&DEFmonths[]<=9&avDi[]>=40&avDi[]<60]<-4
+  # ClimLim[DEFmonths[]>=7&DEFmonths[]<=9&avDi[]>=60&avDi[]<80]<-4
+  # ClimLim[DEFmonths[]>=7&DEFmonths[]<=9&avDi[]>=80]<-4
+  #  
+  # ClimLim[DEFmonths[]>=10&DEFmonths[]<=12&avDi[]<20]<-3
+  # ClimLim[DEFmonths[]>=10&DEFmonths[]<=12&avDi[]>=20&avDi[]<40]<-4
+  # ClimLim[DEFmonths[]>=10&DEFmonths[]<=12&avDi[]>=40&avDi[]<60]<-4
+  # ClimLim[DEFmonths[]>=10&DEFmonths[]<=12&avDi[]>=60&avDi[]<80]<-4
+  # ClimLim[DEFmonths[]>=10&DEFmonths[]<=12&avDi[]>=80]<-4
   ###end original classification
   
   #par(mfrow=c(1,1))
@@ -603,17 +607,17 @@ calcAgriMaps <- function(munis.r, PAW, year, BRA.e, hemi)
 
 
 outputDir <- "Output"
-className <- "Original-NH"
+className <- "class-A-SH"
 
 #create the output directory for this classification if it does not exist
 if(!dir.exists(paste0(outputDir,"/",className))) { dir.create(paste0(outputDir,"/",className)) }
 
 #y <-2015
-for(y in 2003:2016)
+for(y in 2005:2016)
 {
-  writeClimRast <- F
+  writeClimRast <- T
   writeClimPdf <- F
-  calcAgriMaps(munis.r, PAW, y, BRA.ext, "N")
+  calcAgriMaps(munis.r, PAW, y, BRA.ext, "S")
   print(paste0(y," done"))
 }
 
